@@ -10,7 +10,7 @@
 ===============================================================================
 */
 
-#if defined(__GNUC__) && defined(__ARM_NEON__)
+#if defined(__GNUC__) && defined(__ARM_NEON)
 /*
 ============
 idSIMD_NEON::GetName

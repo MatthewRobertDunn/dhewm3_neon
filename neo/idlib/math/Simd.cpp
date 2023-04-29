@@ -99,7 +99,7 @@ void idSIMD::InitProcessor( const char *module, bool forceGeneric ) {
 				processor = new idSIMD_3DNow;
 			} else if ( ( cpuid & CPUID_MMX ) ) {
 				processor = new idSIMD_MMX;
-			}  else if( (cpuid & CPUID_NEON)) {
+			} else if ( (cpuid & CPUID_NEON ) ) {
 				processor = new idSIMD_NEON;
 			} else {
 				processor = generic;

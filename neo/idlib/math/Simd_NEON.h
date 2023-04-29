@@ -1,3 +1,7 @@
+#if defined (__ARM_NEON__) && !defined(__ARM_NEON)
+#define __ARM_NEON 1
+#endif
+
 #ifndef __MATH_SIMD_NEON_H__
 #define __MATH_SIMD_NEON_H__
 
@@ -13,7 +17,7 @@
 
 class idSIMD_NEON : public idSIMD_Generic {
 public:
-    #if defined(__GNUC__) && defined(__ARM_NEON__)
+    #if defined(__GNUC__) && defined(__ARM_NEON)
         virtual const char * VPCALL GetName( void ) const;
     #endif
 
