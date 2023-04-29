@@ -1,3 +1,5 @@
+#include "sys/platform.h"
+
 #include "idlib/math/Simd_NEON.h"
 
 /*
