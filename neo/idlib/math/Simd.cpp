@@ -35,6 +35,8 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #include "sys/platform.h"
+#include <SDL_timer.h>
+#include <memory>
 #include "idlib/geometry/DrawVert.h"
 #include "idlib/geometry/JointTransform.h"
 #include "idlib/math/Simd_Generic.h"
@@ -144,7 +146,9 @@ void idSIMD::Shutdown( void ) {
 //===============================================================
 
 #define COUNT		1024		// data count
+#define BIG_COUNT 	200000000
 #define NUMTESTS	2048		// number of tests
+#define BIG_NUMTESTS 10
 
 #define RANDOM_SEED		1013904223L	//((int)idLib::sys->GetClockTicks())
 
@@ -195,10 +199,10 @@ double ticksPerNanosecond;
 #define TIME_TYPE int
 
 #define StartRecordTime( start )			\
-	start = 0;
+	start = SDL_GetTicks();
 
 #define StopRecordTime( end )				\
-	end = 1;
+	end = SDL_GetTicks();
 
 #endif
 
@@ -255,15 +259,17 @@ TestAdd
 void TestAdd( void ) {
 	int i;
 	TIME_TYPE start, end, bestClocksGeneric, bestClocksSIMD;
-	ALIGN16( float fdst0[COUNT] );
-	ALIGN16( float fdst1[COUNT] );
-	ALIGN16( float fsrc0[COUNT] );
-	ALIGN16( float fsrc1[COUNT] );
+	std::unique_ptr<float[]> fdst0(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fdst1(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fsrc0(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fsrc1(new float[BIG_COUNT]);
+
+
 	const char *result;
 
 	idRandom srnd( RANDOM_SEED );
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		fsrc0[i] = srnd.CRandomFloat() * 10.0f;
 		fsrc1[i] = srnd.CRandomFloat() * 10.0f;
 	}
@@ -271,54 +277,54 @@ void TestAdd( void ) {
 	idLib::common->Printf("====================================\n" );
 
 	bestClocksGeneric = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_generic->Add( fdst0, 4.0f, fsrc1, COUNT );
+		p_generic->Add( fdst0.get(), 4.0f, fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksGeneric );
 	}
-	PrintClocks( "generic->Add( float + float[] )", COUNT, bestClocksGeneric );
+	PrintClocks( "generic->Add( float + float[] )", BIG_COUNT, bestClocksGeneric );
 
 	bestClocksSIMD = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_simd->Add( fdst1, 4.0f, fsrc1, COUNT );
+		p_simd->Add( fdst1.get(), 4.0f, fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksSIMD );
 	}
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		if ( idMath::Fabs( fdst0[i] - fdst1[i] ) > 1e-5f ) {
 			break;
 		}
 	}
-	result = ( i >= COUNT ) ? "ok" :  S_COLOR_RED "X";
-	PrintClocks( va( "   simd->Add( float + float[] ) %s", result ), COUNT, bestClocksSIMD, bestClocksGeneric );
+	result = ( i >= BIG_COUNT ) ? "ok" :  S_COLOR_RED "X";
+	PrintClocks( va( "   simd->Add( float + float[] ) %s", result ), BIG_COUNT, bestClocksSIMD, bestClocksGeneric );
 
 	bestClocksGeneric = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_generic->Add( fdst0, fsrc0, fsrc1, COUNT );
+		p_generic->Add( fdst0.get(), fsrc0.get(), fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksGeneric );
 	}
-	PrintClocks( "generic->Add( float[] + float[] )", COUNT, bestClocksGeneric );
+	PrintClocks( "generic->Add( float[] + float[] )", BIG_COUNT, bestClocksGeneric );
 
 	bestClocksSIMD = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_simd->Add( fdst1, fsrc0, fsrc1, COUNT );
+		p_simd->Add( fdst1.get(), fsrc0.get(), fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksSIMD );
 	}
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		if ( idMath::Fabs( fdst0[i] - fdst1[i] ) > 1e-5f ) {
 			break;
 		}
 	}
-	result = ( i >= COUNT ) ? "ok" :  S_COLOR_RED "X";
-	PrintClocks( va( "   simd->Add( float[] + float[] ) %s", result ), COUNT, bestClocksSIMD, bestClocksGeneric );
+	result = ( i >= BIG_COUNT ) ? "ok" :  S_COLOR_RED "X";
+	PrintClocks( va( "   simd->Add( float[] + float[] ) %s", result ), BIG_COUNT, bestClocksSIMD, bestClocksGeneric );
 }
 
 /*
@@ -329,15 +335,15 @@ TestSub
 void TestSub( void ) {
 	int i;
 	TIME_TYPE start, end, bestClocksGeneric, bestClocksSIMD;
-	ALIGN16( float fdst0[COUNT] );
-	ALIGN16( float fdst1[COUNT] );
-	ALIGN16( float fsrc0[COUNT] );
-	ALIGN16( float fsrc1[COUNT] );
+	std::unique_ptr<float[]> fdst0(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fdst1(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fsrc0(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fsrc1(new float[BIG_COUNT]);
 	const char *result;
 
 	idRandom srnd( RANDOM_SEED );
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		fsrc0[i] = srnd.CRandomFloat() * 10.0f;
 		fsrc1[i] = srnd.CRandomFloat() * 10.0f;
 	}
@@ -345,54 +351,54 @@ void TestSub( void ) {
 	idLib::common->Printf("====================================\n" );
 
 	bestClocksGeneric = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_generic->Sub( fdst0, 4.0f, fsrc1, COUNT );
+		p_generic->Sub( fdst0.get(), 4.0f, fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksGeneric );
 	}
-	PrintClocks( "generic->Sub( float + float[] )", COUNT, bestClocksGeneric );
+	PrintClocks( "generic->Sub( float + float[] )", BIG_COUNT, bestClocksGeneric );
 
 	bestClocksSIMD = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_simd->Sub( fdst1, 4.0f, fsrc1, COUNT );
+		p_simd->Sub( fdst1.get(), 4.0f, fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksSIMD );
 	}
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		if ( idMath::Fabs( fdst0[i] - fdst1[i] ) > 1e-5f ) {
 			break;
 		}
 	}
-	result = ( i >= COUNT ) ? "ok" :  S_COLOR_RED "X";
-	PrintClocks( va( "   simd->Sub( float + float[] ) %s", result ), COUNT, bestClocksSIMD, bestClocksGeneric );
+	result = ( i >= BIG_COUNT ) ? "ok" :  S_COLOR_RED "X";
+	PrintClocks( va( "   simd->Sub( float + float[] ) %s", result ), BIG_COUNT, bestClocksSIMD, bestClocksGeneric );
 
 	bestClocksGeneric = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_generic->Sub( fdst0, fsrc0, fsrc1, COUNT );
+		p_generic->Sub( fdst0.get(), fsrc0.get(), fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksGeneric );
 	}
-	PrintClocks( "generic->Sub( float[] + float[] )", COUNT, bestClocksGeneric );
+	PrintClocks( "generic->Sub( float[] + float[] )", BIG_COUNT, bestClocksGeneric );
 
 	bestClocksSIMD = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_simd->Sub( fdst1, fsrc0, fsrc1, COUNT );
+		p_simd->Sub( fdst1.get(), fsrc0.get(), fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksSIMD );
 	}
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		if ( idMath::Fabs( fdst0[i] - fdst1[i] ) > 1e-5f ) {
 			break;
 		}
 	}
-	result = ( i >= COUNT ) ? "ok" :  S_COLOR_RED "X";
-	PrintClocks( va( "   simd->Sub( float[] + float[] ) %s", result ), COUNT, bestClocksSIMD, bestClocksGeneric );
+	result = ( i >= BIG_COUNT ) ? "ok" :  S_COLOR_RED "X";
+	PrintClocks( va( "   simd->Sub( float[] + float[] ) %s", result ), BIG_COUNT, bestClocksSIMD, bestClocksGeneric );
 }
 
 /*
@@ -4060,6 +4066,7 @@ void idSIMD::Test_f( const idCmdArgs &args ) {
 	GetBaseClocks();
 
 	TestMath();
+	idLib::common->Printf("Hi there");
 	TestAdd();
 	TestSub();
 	TestMul();

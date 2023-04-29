@@ -19,6 +19,10 @@ class idSIMD_NEON : public idSIMD_Generic {
 public:
     #if defined(__GNUC__) && defined(__ARM_NEON)
         virtual const char * VPCALL GetName( void ) const;
+        virtual void VPCALL Add( float *dst,			const float constant,	const float *src,		const int count );
+        virtual void VPCALL Add( float *dst,			const float *src0,		const float *src1,		const int count );
+        virtual void VPCALL Sub( float *dst,			const float constant,	const float *src,		const int count );
+        virtual void VPCALL Sub( float *dst,			const float *src0,		const float *src1,		const int count );
     #endif
 
 };
