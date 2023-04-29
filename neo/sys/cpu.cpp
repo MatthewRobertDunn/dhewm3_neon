@@ -210,6 +210,9 @@ int Sys_GetProcessorId( void ) {
 	if (SDL_HasSSE2())
 		flags |= CPUID_SSE2;
 
+	if (SDL_HasNEON())
+		flags |= CPUID_NEON;
+
 #ifndef NO_CPUID
 	// there is no SDL_HasSSE3() in SDL 1.2
 	if (HasSSE3())

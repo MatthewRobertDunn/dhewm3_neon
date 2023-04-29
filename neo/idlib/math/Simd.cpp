@@ -44,6 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "idlib/math/Simd_SSE2.h"
 #include "idlib/math/Simd_SSE3.h"
 #include "idlib/math/Simd_AltiVec.h"
+#include "idlib/math/Simd_NEON.h"
 #include "idlib/math/Plane.h"
 #include "idlib/bv/Bounds.h"
 #include "idlib/Lib.h"
@@ -98,6 +99,8 @@ void idSIMD::InitProcessor( const char *module, bool forceGeneric ) {
 				processor = new idSIMD_3DNow;
 			} else if ( ( cpuid & CPUID_MMX ) ) {
 				processor = new idSIMD_MMX;
+			}  else if( (cpuid & CPUID_NEON)) {
+				processor = new idSIMD_NEON;
 			} else {
 				processor = generic;
 			}
