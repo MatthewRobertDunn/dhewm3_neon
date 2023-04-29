@@ -23,6 +23,8 @@ public:
         virtual void VPCALL Add( float *dst,			const float *src0,		const float *src1,		const int count );
         virtual void VPCALL Sub( float *dst,			const float constant,	const float *src,		const int count );
         virtual void VPCALL Sub( float *dst,			const float *src0,		const float *src1,		const int count );
+        virtual void VPCALL Mul( float *dst,			const float constant,	const float *src,		const int count );
+	    virtual void VPCALL Mul( float *dst,			const float *src0,		const float *src1,		const int count );
     #endif
 
 };
