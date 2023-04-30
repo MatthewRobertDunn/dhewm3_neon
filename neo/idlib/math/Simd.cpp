@@ -484,15 +484,15 @@ TestDiv
 void TestDiv( void ) {
 	int i;
 	TIME_TYPE start, end, bestClocksGeneric, bestClocksSIMD;
-	ALIGN16( float fdst0[COUNT] );
-	ALIGN16( float fdst1[COUNT] );
-	ALIGN16( float fsrc0[COUNT] );
-	ALIGN16( float fsrc1[COUNT] );
+	std::unique_ptr<float[]> fdst0(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fdst1(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fsrc0(new float[BIG_COUNT]);
+	std::unique_ptr<float[]> fsrc1(new float[BIG_COUNT]);
 	const char *result;
 
 	idRandom srnd( RANDOM_SEED );
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		fsrc0[i] = srnd.CRandomFloat() * 10.0f;
 		do {
 			fsrc1[i] = srnd.CRandomFloat() * 10.0f;
@@ -503,55 +503,55 @@ void TestDiv( void ) {
 
 
 	bestClocksGeneric = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_generic->Div( fdst0, 4.0f, fsrc1, COUNT );
+		p_generic->Div( fdst0.get(), 4.0f, fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksGeneric );
 	}
-	PrintClocks( "generic->Div( float * float[] )", COUNT, bestClocksGeneric );
+	PrintClocks( "generic->Div( float * float[] )", BIG_COUNT, bestClocksGeneric );
 
 	bestClocksSIMD = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_simd->Div( fdst1, 4.0f, fsrc1, COUNT );
+		p_simd->Div( fdst1.get(), 4.0f, fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksSIMD );
 	}
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		if ( idMath::Fabs( fdst0[i] - fdst1[i] ) > 1e-5f ) {
 			break;
 		}
 	}
-	result = ( i >= COUNT ) ? "ok" :  S_COLOR_RED "X";
-	PrintClocks( va( "   simd->Div( float * float[] ) %s", result ), COUNT, bestClocksSIMD, bestClocksGeneric );
+	result = ( i >= BIG_COUNT ) ? "ok" :  S_COLOR_RED "X";
+	PrintClocks( va( "   simd->Div( float * float[] ) %s", result ), BIG_COUNT, bestClocksSIMD, bestClocksGeneric );
 
 
 	bestClocksGeneric = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_generic->Div( fdst0, fsrc0, fsrc1, COUNT );
+		p_generic->Div( fdst0.get(), fsrc0.get(), fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksGeneric );
 	}
-	PrintClocks( "generic->Div( float[] * float[] )", COUNT, bestClocksGeneric );
+	PrintClocks( "generic->Div( float[] * float[] )", BIG_COUNT, bestClocksGeneric );
 
 	bestClocksSIMD = 0;
-	for ( i = 0; i < NUMTESTS; i++ ) {
+	for ( i = 0; i < BIG_NUMTESTS; i++ ) {
 		StartRecordTime( start );
-		p_simd->Div( fdst1, fsrc0, fsrc1, COUNT );
+		p_simd->Div( fdst1.get(), fsrc0.get(), fsrc1.get(), BIG_COUNT );
 		StopRecordTime( end );
 		GetBest( start, end, bestClocksSIMD );
 	}
 
-	for ( i = 0; i < COUNT; i++ ) {
+	for ( i = 0; i < BIG_COUNT; i++ ) {
 		if ( idMath::Fabs( fdst0[i] - fdst1[i] ) > 1e-3f ) {
 			break;
 		}
 	}
-	result = ( i >= COUNT ) ? "ok" :  S_COLOR_RED "X";
-	PrintClocks( va( "   simd->Div( float[] * float[] ) %s", result ), COUNT, bestClocksSIMD, bestClocksGeneric );
+	result = ( i >= BIG_COUNT ) ? "ok" :  S_COLOR_RED "X";
+	PrintClocks( va( "   simd->Div( float[] * float[] ) %s", result ), BIG_COUNT, bestClocksSIMD, bestClocksGeneric );
 }
 
 /*
