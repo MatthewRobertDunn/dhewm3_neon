@@ -1,6 +1,7 @@
 #include "sys/platform.h"
-
+#include "idlib/math/Vector.h"
 #include "idlib/math/Simd_NEON.h"
+#include <iostream>
 
 /*
 ===============================================================================
@@ -247,7 +248,7 @@ void VPCALL idSIMD_NEON::MulAdd(float *dst, const float constant, const float *s
 {
 	int i, nm = count & 0xfffffffc;
 	float32x4_t v_constant = vdupq_n_f32(constant);
-	
+
 	// Add up four lanes at a time
 	for (i = 0; i < nm; i += 4)
 	{
@@ -291,7 +292,6 @@ void VPCALL idSIMD_NEON::MulAdd(float *dst, const float *src0, const float *src1
 	}
 }
 
-
 /*
 ============
 idSIMD_NEON::MulSub
@@ -299,10 +299,11 @@ idSIMD_NEON::MulSub
   dst[i] -= constant * src[i];
 ============
 */
-void VPCALL idSIMD_NEON::MulSub( float *dst, const float constant, const float *src, const int count ) {
+void VPCALL idSIMD_NEON::MulSub(float *dst, const float constant, const float *src, const int count)
+{
 	int i, nm = count & 0xfffffffc;
 	float32x4_t v_constant = vdupq_n_f32(constant);
-	
+
 	// Add up four lanes at a time
 	for (i = 0; i < nm; i += 4)
 	{
@@ -319,7 +320,6 @@ void VPCALL idSIMD_NEON::MulSub( float *dst, const float constant, const float *
 	}
 }
 
-
 /*
 ============
 idSIMD_NEON::MulSub
@@ -327,8 +327,9 @@ idSIMD_NEON::MulSub
   dst[i] -= src0[i] * src1[i];
 ============
 */
-void VPCALL idSIMD_NEON::MulSub( float *dst, const float *src0, const float *src1, const int count ) {
-		int i, nm = count & 0xfffffffc;
+void VPCALL idSIMD_NEON::MulSub(float *dst, const float *src0, const float *src1, const int count)
+{
+	int i, nm = count & 0xfffffffc;
 	// Add up four lanes at a time
 	for (i = 0; i < nm; i += 4)
 	{
@@ -346,4 +347,38 @@ void VPCALL idSIMD_NEON::MulSub( float *dst, const float *src0, const float *src
 	}
 }
 
+/*
+============
+idSIMD_NEON::Dot
+
+  dst[i] = constant * src[i];
+============
+*/
+void VPCALL idSIMD_NEON::Dot(float *dst, const idVec3 &constant, const idVec3 *src, const int count)
+{
+	int i, nm = count & 0xfffffffc;
+
+	for (i = 0; i < nm; i += 4)
+	{
+		// load
+		float32x4x3_t v_src_xyz = vld3q_f32(&src[i].x);
+
+		// multiply
+		float32x4_t v_dst = vmulq_n_f32(v_src_xyz.val[0], constant.x);
+
+		// multiply and accumulate, we now have the Xes added in
+		v_dst = vmlaq_n_f32(v_dst, v_src_xyz.val[1], constant.y);
+		// multiply and accumulate, we now have the Ys added in
+		v_dst = vmlaq_n_f32(v_dst, v_src_xyz.val[2], constant.z);
+
+		// store all four dot products in destination
+		vst1q_f32(&dst[i], v_dst);
+	}
+
+	// add anything left over.
+	for (; i < count; i++)
+	{
+		dst[i] = constant * src[i];
+	}
+}
 #endif

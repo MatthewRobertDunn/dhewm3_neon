@@ -31,6 +31,7 @@ public:
 	    virtual void VPCALL MulAdd( float *dst,			const float *src0,		const float *src1,		const int count );
         virtual void VPCALL MulSub( float *dst,			const float constant,	const float *src,		const int count );
 	    virtual void VPCALL MulSub( float *dst,			const float *src0,		const float *src1,		const int count );
+        virtual void VPCALL Dot( float *dst,			const idVec3 &constant,	const idVec3 *src,		const int count );
     #endif
 
 };
